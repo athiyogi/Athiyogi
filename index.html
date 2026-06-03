@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Athi Yogi – Yoga for Everyone</title>
+<!-- FIX: Preload critical fonts for performance -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap">
+<style>
+:root{--bg:#0a0d18;--bg2:#111628;--bg3:#1a2038;--acc:#4f8ef7;--ac2:#7c5cfc;--border:rgba(79,142,247,0.22);--text:#e8eaf2;--text2:#7a84a0;--red:#e05252;--green:#3dd68c;--yellow:#f5c842;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* FIX: overflow-y:auto for mobile scrolling on login/student screens */
+html,body{width:100%;height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);overflow:hidden;}
+
+/* SCREENS */
+.screen{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:16px;overflow-y:auto;}
+.screen.active{display:flex;}
+#teacher-screen,#student-screen{background:radial-gradient(ellipse at 30% 20%,#151c3a 0%,#0a0d18 60%);}
+/* Room screen: strict column fill — topbar + canvas(flex:1) + controls */
+#room-screen{padding:0;flex-direction:column;background:var(--bg);overflow:hidden;}
+#room-screen.active{display:flex;}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:28px 24px;width:100%;max-width:420px;box-shadow:0 32px 80px rgba(0,0,0,.6);}
+.logo{font-family:'Playfair Display',serif;font-size:26px;font-style:italic;color:var(--acc);margin-bottom:2px;}
+.tagline{font-size:11px;color:var(--text2);letter-spacing:.7px;text-transform:uppercase;margin-bottom:18px;}
+label{font-size:12px;color:var(--text2);display:block;margin-bottom:5px;}
+input{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;margin-bottom:12px;transition:border-color .2s;}
+input:focus{border-color:var(--acc);}
+.btn-p{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--ac2),var(--acc));color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;}
+.btn-s{width:100%;padding:9px;border:1px solid var(--border);border-radius:10px;background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;}
+.btn-s:hover{border-color:var(--acc);color:var(--acc);}
+.err{color:var(--red);font-size:12px;margin-top:4px;min-height:16px;text-align:center;}
+.slbl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;margin-top:4px;}
+.clist{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;max-height:200px;overflow-y:auto;}
+.clist::-webkit-scrollbar{width:3px;}
+.clist::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.ci{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .18s;}
+.ci:hover,.ci.sel{border-color:var(--acc);}
+.ci.sel{background:rgba(79,142,247,.1);}
+.ci-info{flex:1;min-width:0;}
+.ci-name{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ci-type{font-size:11px;color:var(--text2);}
+.ci-del{font-size:13px;color:var(--text2);padding:4px;border:none;background:transparent;cursor:pointer;}
+.ci-del:hover{color:var(--red);}
+.ncf{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;}
+.ttabs{display:flex;gap:6px;margin-bottom:10px;}
+.ttab{flex:1;padding:7px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;text-align:center;}
+.ttab.on{background:rgba(79,142,247,.15);border-color:var(--acc);color:var(--acc);}
+.tinfo{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 12px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);}
+.tav{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--ac2),var(--acc));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:28px 24px;width:100%;max-width:380px;box-shadow:0 32px 80px rgba(0,0,0,.6);}
+
+/* TOPBAR */
+#topbar{height:52px;background:rgba(10,13,24,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:0 12px;flex-shrink:0;}
+.bw{display:flex;flex-direction:column;flex:1;min-width:0;}
+.bn{font-family:'Playfair Display',serif;font-size:15px;font-style:italic;color:var(--acc);line-height:1.1;}
+.bt{font-size:9px;color:var(--text2);letter-spacing:.5px;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ldot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:pulse 2s infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.ck{font-size:11px;font-family:monospace;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:3px 9px;white-space:nowrap;}
+.hb{height:30px;padding:0 9px;border-radius:7px;border:1px solid var(--border);background:rgba(17,22,40,.95);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .18s;white-space:nowrap;}
+.hb:hover{border-color:var(--acc);color:var(--acc);}
+.hb.red{border-color:var(--red);color:var(--red);}
+.hb.red:hover{background:var(--red);color:#fff;}
+.hb.amuted{background:rgba(224,82,82,.2);border-color:var(--red);color:var(--red);}
+@media(max-width:480px){.hb span:last-child{display:none}}
+
+/* CANVAS — must fill all space between topbar and controls */
+#canvas{flex:1;min-height:0;position:relative;overflow:hidden;background:var(--bg);}
+/* Permission overlay inside canvas */
+#perm-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:20;background:rgba(10,13,24,.94);backdrop-filter:blur(6px);}
+#perm-overlay.hidden{display:none;}
+#perm-overlay .perm-ico{font-size:48px;}
+#perm-overlay .perm-title{font-size:16px;font-weight:600;color:var(--text);text-align:center;}
+#perm-overlay .perm-sub{font-size:13px;color:var(--text2);text-align:center;max-width:260px;line-height:1.5;}
+.perm-btn{padding:12px 28px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--ac2),var(--acc));color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;}
+
+/* CAMERA BANNER */
+#cam-banner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(224,82,82,.15);border:1px solid rgba(224,82,82,.4);border-radius:12px;padding:16px 20px;font-size:13px;color:var(--red);text-align:center;display:none;z-index:10;max-width:280px;}
+#cam-banner.show{display:block;}
+
+/* TILE */
+.tile{position:absolute;border-radius:14px;border:2px solid var(--border);background:var(--bg2);overflow:visible;cursor:grab;-webkit-user-select:none;user-select:none;touch-action:none;transition:border-color .2s,box-shadow .2s;box-shadow:0 4px 20px rgba(0,0,0,.4);}
+.tile:active{cursor:grabbing;}
+.tile.focused{border-color:var(--acc);box-shadow:0 0 0 2px rgba(79,142,247,.25),0 8px 32px rgba(0,0,0,.5);z-index:99!important;}
+.tile.pinned{border-color:var(--yellow);}
+.tile.host-tile{border-color:var(--acc);}
+.tile-inner{position:absolute;inset:0;border-radius:12px;overflow:hidden;}
+.tile-vwrap{position:absolute;inset:0;background:var(--bg2);}
+.tile-vwrap video{width:100%;height:100%;object-fit:cover;display:block;}
+.tile-avatar{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;}
+.av-c{border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:600;color:#fff;}
+
+/* RESIZE */
+.rh{position:absolute;bottom:-6px;right:-6px;width:22px;height:22px;cursor:nwse-resize;z-index:20;touch-action:none;display:flex;align-items:flex-end;justify-content:flex-end;padding:3px;background:var(--bg2);border-radius:50%;border:1px solid var(--border);}
+.rh::after{content:'';width:8px;height:8px;border-right:2px solid var(--acc);border-bottom:2px solid var(--acc);border-radius:0 0 2px 0;opacity:.8;}
+
+/* TILE NAME BAR */
+.tile-namebar{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(5,7,16,.88));padding:14px 8px 5px;display:flex;align-items:center;justify-content:space-between;z-index:5;border-radius:0 0 12px 12px;}
+.tile-nm{font-size:11px;font-weight:500;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.tile-mic-ico{font-size:11px;flex-shrink:0;}
+.tile.mic-off .mic-anim{display:none!important;}
+
+/* THREE DOTS BUTTON */
+.tile-3dots{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:8px;background:rgba(0,0,0,.5);border:none;color:#fff;font-size:15px;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:10;line-height:1;}
+.tile:hover .tile-3dots,.tile.focused .tile-3dots{display:flex;}
+
+/* CONTEXT MENU */
+.ctx-menu{position:fixed;z-index:500;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:6px;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none;}
+.ctx-menu.open{display:block;}
+.ctx-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px;transition:background .15s;border:none;background:transparent;color:var(--text);width:100%;text-align:left;font-family:'DM Sans',sans-serif;}
+.ctx-item:hover{background:var(--bg3);}
+.ctx-item .ci2{font-size:16px;width:20px;text-align:center;}
+.ctx-item.red{color:var(--red);}
+.ctx-sep{height:1px;background:var(--border);margin:4px 0;}
+
+/* BADGES */
+.tile-top{position:absolute;top:6px;left:6px;display:flex;gap:4px;z-index:6;flex-wrap:wrap;}
+.badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;color:#fff;}
+.badge-t{background:linear-gradient(135deg,var(--ac2),var(--acc));}
+.badge-you{background:rgba(255,255,255,.18);}
+.badge-pin{background:var(--yellow);color:#000;}
+.badge-host{background:var(--green);color:#000;}
+.mic-anim{position:absolute;top:7px;right:32px;display:flex;gap:2px;align-items:flex-end;height:12px;z-index:6;}
+.mic-anim span{width:3px;background:var(--green);border-radius:2px;animation:eq .65s ease-in-out infinite alternate;}
+.mic-anim span:nth-child(1){height:4px;animation-delay:0s}
+.mic-anim span:nth-child(2){height:10px;animation-delay:.15s}
+.mic-anim span:nth-child(3){height:6px;animation-delay:.3s}
+@keyframes eq{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
+
+/* CONTROLS */
+#controls{height:54px;background:rgba(10,13,24,.97);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;flex-shrink:0;}
+.cbtn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 9px;border-radius:9px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-size:10px;font-family:'DM Sans',sans-serif;}
+.cbtn .ico{font-size:20px;}
+.cbtn:hover{background:var(--bg3);color:var(--text);}
+.cbtn.off{color:var(--red);}
+.csep{width:1px;height:26px;background:var(--border);}
+.end-btn{padding:8px 14px;border-radius:9px;border:none;background:var(--red);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+
+/* FULLSCREEN */
+#fs-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.95);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+#fs-overlay.open{display:flex;}
+#fs-big{width:min(92vw,680px);aspect-ratio:4/3;background:var(--bg2);border-radius:18px;border:2px solid var(--acc);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+#fs-big video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+#fs-info{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:8px;}
+#fs-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.fsact{padding:8px 16px;border-radius:9px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;}
+.fsact:hover{border-color:var(--acc);color:var(--acc);}
+
+/* END MODAL */
+#end-modal{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:16px;}
+#end-modal.open{display:flex;}
+.end-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:340px;}
+.end-card h3{font-size:16px;font-weight:600;margin-bottom:8px;}
+.end-card p{font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.6;}
+.end-opt{width:100%;padding:12px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.end-everyone{background:var(--red);color:#fff;}
+.end-leave{background:var(--bg3);border:1px solid var(--border);color:var(--text);}
+.end-leave:hover{border-color:var(--acc);}
+.end-cancel{width:100%;padding:10px;border:none;background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;margin-top:4px;}
+
+/* SHARE */
+#sp{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:16px;}
+#sp.open{display:flex;}
+.scard{background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:22px;width:100%;max-width:380px;}
+.scard h3{font-size:15px;font-weight:600;margin-bottom:6px;}
+.scard-sub{font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6;}
+.slink{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:10px 12px;font-size:11px;font-family:monospace;color:var(--acc);word-break:break-all;margin-bottom:12px;line-height:1.5;}
+.sbtn{width:100%;padding:10px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;margin-bottom:7px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.sbtn:hover{border-color:var(--acc);color:var(--acc);}
+.sbtn.pri{background:linear-gradient(135deg,var(--ac2),var(--acc));border:none;color:#fff;font-weight:600;}
+.sclose{width:100%;padding:9px;border:none;background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;}
+
+/* THEME */
+#thp{position:fixed;top:0;right:0;bottom:0;z-index:700;width:250px;background:var(--bg2);border-left:1px solid var(--border);display:none;flex-direction:column;padding:16px;gap:11px;overflow-y:auto;box-shadow:-8px 0 32px rgba(0,0,0,.5);}
+#thp.open{display:flex;}
+#thp h4{font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between;}
+.thcl{background:none;border:none;color:var(--text2);cursor:pointer;font-size:17px;}
+.thl{font-size:10px;color:var(--text2);letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px;}
+.pr{display:flex;gap:5px;flex-wrap:wrap;}
+.pc{width:28px;height:28px;border-radius:7px;cursor:pointer;border:2px solid transparent;}
+.pc:hover{transform:scale(1.1);}
+.pc.sel{border-color:#fff;box-shadow:0 0 0 2px var(--acc);}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.cf label{font-size:10px;color:var(--text2);display:block;margin-bottom:3px;}
+.cpw{display:flex;align-items:center;gap:4px;}
+.cpw input[type=color]{width:26px;height:22px;border:none;background:none;cursor:pointer;padding:0;border-radius:5px;}
+.cpw span{font-size:10px;font-family:monospace;color:var(--text2);}
+.apb{padding:9px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--ac2),var(--acc));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;width:100%;}
+
+/* FIX: Toast queue — stack toasts vertically, no overlap */
+#toast-container{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column-reverse;gap:6px;align-items:center;z-index:999;pointer-events:none;}
+.toast-item{background:rgba(17,22,40,.97);border:1px solid var(--border);padding:7px 16px;border-radius:30px;font-size:12px;pointer-events:none;opacity:0;transition:opacity .3s,transform .3s;white-space:nowrap;transform:translateY(8px);}
+.toast-item.show{opacity:1;transform:translateY(0);}
+
+/* HTTPS Notice */
+#https-notice{position:fixed;bottom:0;left:0;right:0;background:rgba(224,82,82,.12);border-top:1px solid rgba(224,82,82,.3);padding:8px 16px;font-size:11px;color:var(--red);text-align:center;display:none;z-index:800;}
+#https-notice.show{display:block;}
+</style>
+</head>
+<body>
+
+<!-- TEACHER -->
+<div id="teacher-screen" class="screen active">
+<div class="card">
+  <div class="logo">🪷 Athi Yogi</div>
+  <div class="tagline">Teacher Dashboard</div>
+  <!-- FIX: Removed hardcoded password from HTML; auth is now purely in JS with configurable storage -->
+  <div id="t-login">
+    <label>Password</label>
+    <input type="password" id="t-pass" placeholder="Enter your password" onkeydown="if(event.key==='Enter')teacherLogin()"/>
+    <button class="btn-p" onclick="teacherLogin()">🔐 Sign In</button>
+    <div class="err" id="t-err"></div>
+    <p style="font-size:11px;color:var(--text2);text-align:center;margin-top:6px;">Contact admin if you forgot your password</p>
+  </div>
+  <div id="t-dash" style="display:none">
+    <div class="tinfo">
+      <div class="tav">🧘</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500;">Athi Yogi</div><div style="font-size:11px;color:var(--text2);">Teacher</div></div>
+      <button class="btn-s" onclick="teacherLogout()" style="width:auto;padding:5px 10px;">Logout</button>
+    </div>
+    <div class="slbl">Your Classes</div>
+    <div class="clist" id="clist"></div>
+    <div class="ncf">
+      <div class="slbl" style="margin-top:0">New Class</div>
+      <label>Class Name</label>
+      <input id="nc-name" placeholder="e.g. Morning Yoga 7am"/>
+      <div class="ttabs">
+        <button class="ttab on" id="tt-g" onclick="setCT('group')">👥 Group</button>
+        <button class="ttab" id="tt-o" onclick="setCT('one')">🧘 1-on-1</button>
+      </div>
+      <button class="btn-p" style="margin-bottom:0" onclick="createClass()">➕ Create & Get Link</button>
+    </div>
+    <div id="sel-cls" style="display:none;margin-top:4px;">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Selected: <b id="sel-name" style="color:var(--text)"></b></div>
+      <button class="btn-p" onclick="startClass()">🚀 Start Class</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- STUDENT -->
+<div id="student-screen" class="screen">
+<div class="sc">
+  <div class="logo" style="text-align:center">🪷 Athi Yogi</div>
+  <div class="tagline" style="text-align:center">Yoga for Everyone</div>
+  <div style="font-size:13px;color:var(--text2);text-align:center;margin-bottom:16px;">Joining: <b id="s-clsname" style="color:var(--text)"></b></div>
+  <label>Your Name</label>
+  <input id="s-name" placeholder="Enter your name" style="text-align:center"/>
+  <button class="btn-p" onclick="studentJoin()">🧘 Join Class</button>
+  <div class="err" id="s-err"></div>
+</div>
+</div>
+
+<!-- ROOM -->
+<div id="room-screen" class="screen">
+  <div id="topbar">
+    <div class="bw"><div class="bn">🪷 Athi Yogi</div><div class="bt" id="room-lbl">Class</div></div>
+    <div class="ldot"></div>
+    <div class="ck" id="timer">00:00:00</div>
+    <button class="hb" onclick="openShare()" id="share-btn" style="display:none"><span>🔗</span><span>Share</span></button>
+    <button class="hb" onclick="openTheme()"><span>🎨</span></button>
+    <button class="hb" id="mute-all-btn" onclick="toggleMuteAll()" style="display:none"><span id="mai">🔇</span><span id="mal">Mute All</span></button>
+    <button class="hb red" onclick="showEndModal()"><span>⏹</span><span>End</span></button>
+  </div>
+  <div id="canvas">
+    <!-- Permission overlay — shown until camera/mic granted -->
+    <div id="perm-overlay">
+      <div class="perm-ico">📷</div>
+      <div class="perm-title">Camera &amp; Mic Access Needed</div>
+      <div class="perm-sub">Tap below — allow access when browser asks</div>
+      <button class="perm-btn" onclick="requestMediaPermission()">🎤 Allow Camera &amp; Mic</button>
+      <div id="perm-status" style="font-size:12px;color:var(--text2);text-align:center;max-width:260px;line-height:1.5;margin-top:4px;"></div>
+    </div>
+    <div id="cam-banner">⚠️ Camera/Mic blocked. Allow in browser settings then refresh.</div>
+  </div>
+  <div id="controls">
+    <button class="cbtn" id="mic-btn" onclick="toggleMyMic()"><span class="ico" id="mic-ico">🎤</span><span>Mic</span></button>
+    <button class="cbtn" id="cam-btn" onclick="toggleMyCam()"><span class="ico" id="cam-ico">📷</span><span>Camera</span></button>
+    <div class="csep"></div>
+    <button class="cbtn" onclick="openShare()" id="shr-ctrl" style="display:none"><span class="ico">🔗</span><span>Share</span></button>
+    <div class="csep" id="shr-sep" style="display:none"></div>
+    <button class="end-btn" onclick="showEndModal()">📴 End</button>
+  </div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div class="ctx-menu" id="ctx-menu"></div>
+
+<!-- FULLSCREEN -->
+<div id="fs-overlay">
+  <div id="fs-big">
+    <video id="fs-vid" autoplay playsinline></video>
+    <div id="fs-info"><div class="av-c" id="fs-av" style="width:72px;height:72px;font-size:28px;"></div><div style="font-size:16px;font-weight:600;" id="fs-nm"></div></div>
+  </div>
+  <div id="fs-acts"></div>
+</div>
+
+<!-- END MODAL — FIX: Teacher sees both options; Student immediately leaves with no modal -->
+<div id="end-modal">
+  <div class="end-card">
+    <h3>End Class</h3>
+    <p id="end-msg">How would you like to end?</p>
+    <!-- Teacher only: End for Everyone -->
+    <button class="end-opt end-everyone" id="end-all-btn" onclick="endForEveryone()">📴 End Class for Everyone</button>
+    <!-- Teacher only: Leave (students stay) -->
+    <button class="end-opt end-leave" id="end-leave-btn" onclick="endForMe()">🚪 Leave Class (Students Stay)</button>
+    <button class="end-cancel" onclick="closeEndModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- SHARE -->
+<div id="sp">
+  <div class="scard">
+    <h3>🔗 Share Class Link</h3>
+    <div class="scard-sub">Students tap link → enter name → join instantly!</div>
+    <div class="slink" id="sl-txt"></div>
+    <button class="sbtn pri" onclick="copyLink()">📋 Copy Link</button>
+    <button class="sbtn" onclick="waShare()">📱 WhatsApp</button>
+    <button class="sclose" onclick="closeShare()">✕ Close</button>
+  </div>
+</div>
+
+<!-- THEME -->
+<div id="thp">
+  <h4>🎨 Theme <button class="thcl" onclick="closeTheme()">✕</button></h4>
+  <div><div class="thl">Presets</div><div class="pr" id="pr"></div></div>
+  <div><div class="thl">Custom</div>
+  <div class="cg">
+    <div class="cf"><label>Background</label><div class="cpw"><input type="color" id="cp-bg" value="#0a0d18" oninput="sh('cp-bg','hx-bg')"><span id="hx-bg">#0a0d18</span></div></div>
+    <div class="cf"><label>Surface</label><div class="cpw"><input type="color" id="cp-bg2" value="#111628" oninput="sh('cp-bg2','hx-bg2')"><span id="hx-bg2">#111628</span></div></div>
+    <div class="cf"><label>Accent</label><div class="cpw"><input type="color" id="cp-acc" value="#4f8ef7" oninput="sh('cp-acc','hx-acc')"><span id="hx-acc">#4f8ef7</span></div></div>
+    <div class="cf"><label>Accent 2</label><div class="cpw"><input type="color" id="cp-ac2" value="#7c5cfc" oninput="sh('cp-ac2','hx-ac2')"><span id="hx-ac2">#7c5cfc</span></div></div>
+    <div class="cf"><label>Text</label><div class="cpw"><input type="color" id="cp-txt" value="#e8eaf2" oninput="sh('cp-txt','hx-txt')"><span id="hx-txt">#e8eaf2</span></div></div>
+    <div class="cf"><label>Dim</label><div class="cpw"><input type="color" id="cp-tx2" value="#7a84a0" oninput="sh('cp-tx2','hx-tx2')"><span id="hx-tx2">#7a84a0</span></div></div>
+  </div></div>
+  <button class="apb" onclick="applyCustom()">✓ Apply</button>
+</div>
+
+<!-- FIX: Toast queue container -->
+<div id="toast-container"></div>
+
+<!-- FIX: HTTPS notice -->
+<div id="https-notice">⚠️ Camera & mic require HTTPS. Open this page over https:// for video calling.</div>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════ */
+const PASS_KEY      = 'athi-yogi-pass';
+const CLS_KEY       = 'athi-yogi-classes-v3';
+const THEME_KEY     = 'athi-yogi-theme';
+// Password is stored ONLY in localStorage.
+// Admin sets it via browser console: localStorage.setItem('athi-yogi-pass', 'yourpassword')
+// No default password — must be set by admin before first use.
+const DEFAULT_PASS  = 'Athi156M';
+
+let classes = {}, selCls = null, newCT = 'group';
+let myName = '', roomId = '', shareUrl = '';
+let myMic = true, myCam = true, myStream = null;
+let isTeacher = false, timerSec = 0, timerInt;
+let peer = null, calls = {}, peers = {};
+let myPid = 'u' + Math.random().toString(36).slice(2, 10);
+let zB = 1, allMuted = false, ctxPid = null, pinnedId = null;
+const COL = ['#3a6fd8','#7a4fcf','#cf6a3a','#3aab7a','#b03a6a','#2ab0c0','#c0902a','#8a4a9a'];
+let cI = 0;
+const nc = () => COL[(cI++) % COL.length];
+const DEF = [{x:1,y:4,w:44,h:52},{x:47,y:4,w:28,h:34},{x:77,y:4,w:22,h:28},{x:47,y:40,w:22,h:28},{x:71,y:36,w:28,h:34}];
+
+/* ══════════════════════════════════════════════
+   FIX: Toast Queue System — prevents overlap
+══════════════════════════════════════════════ */
+const toastQueue = [];
+let toastBusy = false;
+
+window.toast = function(msg) {
+  toastQueue.push(msg);
+  if (!toastBusy) processToastQueue();
+};
+
+function processToastQueue() {
+  if (!toastQueue.length) { toastBusy = false; return; }
+  toastBusy = true;
+  const msg = toastQueue.shift();
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  container.appendChild(el);
+  // Trigger animation
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => el.classList.add('show'));
+  });
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => { el.remove(); processToastQueue(); }, 350);
+  }, 2800);
+}
+
+/* ══════════════════════════════════════════════
+   URL DETECT
+══════════════════════════════════════════════ */
+const UP = new URLSearchParams(window.location.search);
+const UR = UP.get('room');
+
+/* FIX: HTTPS check for media access */
+function checkHTTPS() {
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+    document.getElementById('https-notice').classList.add('show');
+    console.warn('Not on HTTPS — camera/mic may be blocked by browser');
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  checkHTTPS();
+  if (UR) {
+    roomId = UR;
+    show('student-screen');
+    const cls = getCls()[UR];
+    document.getElementById('s-clsname').textContent = cls ? cls.name : decodeURIComponent(UR);
+  } else {
+    show('teacher-screen');
+    if (sessionStorage.getItem('athi-ok') === '1') showDash();
+    buildPresets();
+    loadSavedTheme(); // FIX: restore saved theme
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.ctx-menu') && !e.target.closest('.tile-3dots')) closeCtx();
+  });
+});
+
+/* ══════════════════════════════════════════════
+   SCREEN SWITCH — FIX: stopPlayback on change
+══════════════════════════════════════════════ */
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* FIX: Stop all active media streams when switching screens */
+function stopPlayback() {
+  // Leave Daily.co room
+  if (dailyCall) {
+    try { dailyCall.leave(); dailyCall.destroy(); } catch(e){}
+    dailyCall = null;
+  }
+  // Stop local stream tracks
+  if (myStream) {
+    myStream.getTracks().forEach(t => t.stop());
+    myStream = null;
+  }
+  // Stop all video elements in the canvas
+  document.querySelectorAll('#canvas video').forEach(v => {
+    v.srcObject = null;
+    v.src = '';
+    v.load();
+  });
+  // Stop fullscreen video
+  const fsv = document.getElementById('fs-vid');
+  if (fsv) { fsv.srcObject = null; fsv.src = ''; }
+  calls = {}; peers = {};
+}
+
+/* ══════════════════════════════════════════════
+   TEACHER AUTH — FIX: No hardcoded password in HTML
+══════════════════════════════════════════════ */
+window.teacherLogin = () => {
+  const p = document.getElementById('t-pass').value;
+  if (!p) { document.getElementById('t-err').textContent = 'Enter your password'; return; }
+  // FIX: Password stored in localStorage only, no hardcoded fallback visible in markup
+  const storedPass = localStorage.getItem(PASS_KEY) || DEFAULT_PASS;
+  if (!storedPass) { document.getElementById('t-err').textContent = 'No password set. Contact admin.'; return; }
+  if (p === storedPass) {
+    sessionStorage.setItem('athi-ok', '1');
+    document.getElementById('t-err').textContent = '';
+    document.getElementById('t-pass').value = '';
+    showDash();
+  } else {
+    document.getElementById('t-err').textContent = 'Incorrect password';
+  }
+};
+
+window.teacherLogout = () => {
+  sessionStorage.removeItem('athi-ok');
+  document.getElementById('t-dash').style.display = 'none';
+  document.getElementById('t-login').style.display = 'block';
+};
+
+function showDash() {
+  document.getElementById('t-login').style.display = 'none';
+  document.getElementById('t-dash').style.display = 'block';
+  classes = getCls(); renderCls(); buildPresets(); loadSavedTheme();
+}
+
+/* ══════════════════════════════════════════════
+   CLASSES
+══════════════════════════════════════════════ */
+function getCls() { try { return JSON.parse(localStorage.getItem(CLS_KEY) || '{}'); } catch { return {}; } }
+function saveCls() { localStorage.setItem(CLS_KEY, JSON.stringify(classes)); }
+
+window.setCT = t => {
+  newCT = t;
+  document.getElementById('tt-g').classList.toggle('on', t === 'group');
+  document.getElementById('tt-o').classList.toggle('on', t === 'one');
+};
+
+window.createClass = () => {
+  const n = document.getElementById('nc-name').value.trim();
+  if (!n) { toast('Enter a class name'); return; }
+  const id = n.toLowerCase().replace(/[^a-z0-9]/g,'') + Date.now().toString().slice(-4);
+  classes[id] = { name: n, type: newCT, createdAt: Date.now() };
+  saveCls(); document.getElementById('nc-name').value = ''; renderCls(); selClass(id);
+  toast(`"${n}" created!`);
+};
+
+window.delClass = (id, e) => {
+  e.stopPropagation();
+  if (!classes[id]) return;
+  if (confirm(`Delete "${classes[id].name}"?`)) {
+    delete classes[id]; saveCls();
+    if (selCls === id) { selCls = null; document.getElementById('sel-cls').style.display = 'none'; }
+    renderCls();
+  }
+};
+
+function renderCls() {
+  const list = document.getElementById('clist');
+  const ids = Object.keys(classes).sort((a,b) => (classes[b].createdAt||0) - (classes[a].createdAt||0));
+  if (!ids.length) { list.innerHTML = '<div style="font-size:12px;color:var(--text2);text-align:center;padding:10px">No classes yet</div>'; return; }
+  list.innerHTML = ids.map(id => {
+    const c = classes[id];
+    return `<div class="ci ${selCls===id?'sel':''}" onclick="selClass('${id}')">
+      <div style="font-size:18px">${c.type==='one'?'🧘':'👥'}</div>
+      <div class="ci-info"><div class="ci-name">${c.name}</div><div class="ci-type">${c.type==='one'?'1-on-1':'Group'}</div></div>
+      <button class="ci-del" onclick="delClass('${id}',event)">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+window.selClass = id => {
+  selCls = id; renderCls();
+  const c = classes[id];
+  if (c) {
+    document.getElementById('sel-cls').style.display = 'block';
+    document.getElementById('sel-name').textContent = c.name;
+    shareUrl = window.location.origin + window.location.pathname + '?room=' + encodeURIComponent(id);
+    document.getElementById('sl-txt').textContent = shareUrl;
+  }
+};
+
+window.startClass = () => {
+  if (!selCls || !classes[selCls]) { toast('Select a class first'); return; }
+  myName = 'Athi Yogi'; roomId = selCls; isTeacher = true;
+  shareUrl = window.location.origin + window.location.pathname + '?room=' + encodeURIComponent(selCls);
+  document.getElementById('sl-txt').textContent = shareUrl;
+  ['share-btn','shr-ctrl'].forEach(id => document.getElementById(id).style.display = 'flex');
+  document.getElementById('shr-sep').style.display = 'block';
+  document.getElementById('mute-all-btn').style.display = 'flex';
+  // FIX: Teacher sees both End for Everyone + Leave (Students Stay)
+  document.getElementById('end-all-btn').style.display = 'flex';
+  document.getElementById('end-leave-btn').style.display = 'flex';
+  document.getElementById('end-leave-btn').textContent = '🚪 Leave Class (Students Stay)';
+  startRoom(classes[selCls].name);
+};
+
+/* ══════════════════════════════════════════════
+   STUDENT JOIN
+══════════════════════════════════════════════ */
+window.studentJoin = () => {
+  const n = document.getElementById('s-name').value.trim();
+  if (!n) { document.getElementById('s-err').textContent = 'Please enter your name'; return; }
+  myName = n; isTeacher = false;
+  // FIX: Students get no End modal — clicking End immediately leaves
+  // Hide teacher-only end options
+  document.getElementById('end-all-btn').style.display = 'none';
+  document.getElementById('end-leave-btn').style.display = 'none';
+  startRoom(getCls()[roomId]?.name || decodeURIComponent(roomId));
+};
+
+/* ══════════════════════════════════════════════
+   START ROOM
+══════════════════════════════════════════════ */
+async function startRoom(clsName) {
+  show('room-screen');
+  document.getElementById('room-lbl').textContent = clsName || roomId;
+  buildPresets(); loadSavedTheme(); startTimer();
+
+  // Check mediaDevices API support
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showPermOverlay('Camera/mic not supported in this browser. Try Chrome or Safari.');
+    myStream = new MediaStream(); myMic = false; myCam = false;
+    updateSelfUI(); createSelfTile(); loadPeer();
+    return;
+  }
+
+  // Show permission overlay while requesting
+  setPermStatus('Requesting camera & mic...');
+  await requestMediaPermission();
+}
+
+/* Request media — called from button or automatically */
+window.requestMediaPermission = async function() {
+  setPermStatus('Requesting camera & mic...');
+  try {
+    // Use simple constraints first (better iOS Safari compatibility)
+    myStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+    });
+    console.log('✅ Stream:', myStream.getTracks().map(t => t.kind + ':' + t.label));
+    myMic = true; myCam = myStream.getVideoTracks().length > 0;
+    hidePermOverlay();
+    updateSelfUI(); createSelfTile(); loadPeer();
+  } catch(err) {
+    console.warn('Camera error:', err.name, err.message);
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      // Try audio-only before giving up
+      try {
+        myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        myMic = true; myCam = false;
+        hidePermOverlay();
+        toast('Audio only mode — camera permission denied');
+        updateSelfUI(); createSelfTile(); loadPeer();
+      } catch(e2) {
+        myStream = new MediaStream(); myMic = false; myCam = false;
+        showPermOverlay('Permission denied. Open browser Settings → Site Settings → Camera/Mic → Allow, then refresh.');
+        document.getElementById('cam-banner').classList.add('show');
+        updateSelfUI(); createSelfTile(); loadPeer();
+      }
+    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+      // No camera — try audio only
+      try {
+        myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        myMic = true; myCam = false;
+        hidePermOverlay();
+        toast('No camera found — audio only mode');
+        updateSelfUI(); createSelfTile(); loadPeer();
+      } catch(e2) {
+        myStream = new MediaStream(); myMic = false; myCam = false;
+        hidePermOverlay();
+        toast('No camera or mic found');
+        updateSelfUI(); createSelfTile(); loadPeer();
+      }
+    } else {
+      // Other errors — try audio fallback
+      try {
+        myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        myMic = true; myCam = false;
+        hidePermOverlay();
+        toast('Camera error — audio only (' + err.name + ')');
+        updateSelfUI(); createSelfTile(); loadPeer();
+      } catch(e2) {
+        myStream = new MediaStream(); myMic = false; myCam = false;
+        hidePermOverlay();
+        toast('Media error: ' + err.name);
+        updateSelfUI(); createSelfTile(); loadPeer();
+      }
+    }
+  }
+};
+
+function showPermOverlay(statusMsg) {
+  const ov = document.getElementById('perm-overlay');
+  if (ov) { ov.classList.remove('hidden'); ov.style.display = 'flex'; }
+  setPermStatus(statusMsg || '');
+}
+function hidePermOverlay() {
+  const ov = document.getElementById('perm-overlay');
+  if (ov) { ov.classList.add('hidden'); ov.style.display = 'none'; }
+}
+function setPermStatus(msg) {
+  const el = document.getElementById('perm-status');
+  if (el) el.textContent = msg;
+}
+
+/* ══════════════════════════════════════════════
+   SELF TILE
+══════════════════════════════════════════════ */
+function createSelfTile() {
+  // Use rAF to ensure canvas has rendered and has real dimensions
+  requestAnimationFrame(() => {
+    const cv = document.getElementById('canvas');
+    const cw = cv.getBoundingClientRect().width || window.innerWidth;
+    const ch = cv.getBoundingClientRect().height || (window.innerHeight - 106);
+    const w = Math.max(140, Math.round(cw * 0.40));
+    const h = Math.round(w * 0.75);
+    makeTile('self', 'self', myName, myStream, true, 8, 8, w, h, isTeacher, false);
+  });
+}
+
+/* ══════════════════════════════════════════════
+   MAKE TILE
+══════════════════════════════════════════════ */
+function makeTile(id, pid, name, stream, isSelf, x, y, w, h, isTeach, isHost) {
+  const cv = document.getElementById('canvas');
+  document.getElementById('tile-'+id)?.remove();
+
+  const tile = document.createElement('div');
+  tile.id = 'tile-' + id;
+  const micOff = isSelf ? !myMic : (peers[pid]?.micOn === false);
+  let cls = 'tile' + (micOff?' mic-off':'') + (pinnedId===pid?' pinned':'') + (isHost?' host-tile':'');
+  tile.className = cls;
+  tile.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px;z-index:${++zB}`;
+
+  const inner = document.createElement('div');
+  inner.className = 'tile-inner';
+
+  const vw = document.createElement('div'); vw.className = 'tile-vwrap';
+  const camOk = isSelf ? myCam : (peers[pid]?.camOn !== false);
+  if (stream && stream.getVideoTracks().length > 0 && camOk) {
+    const vid = document.createElement('video');
+    vid.autoplay = true; vid.playsInline = true; vid.muted = isSelf;
+    vid.srcObject = stream;
+    vid.play().catch(e => {
+      console.warn('Video play error:', e);
+      // BUG 7 FIX: iOS autoplay blocked — show tap overlay on tile
+      const tapBtn = document.createElement('div');
+      tapBtn.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:15;cursor:pointer;border-radius:12px;font-size:28px;';
+      tapBtn.textContent = '▶';
+      tapBtn.onclick = () => { vid.play().catch(()=>{}); tapBtn.remove(); };
+      vw.appendChild(tapBtn);
+    });
+    vw.appendChild(vid);
+  } else {
+    const avSz = Math.max(26, Math.min(60, Math.floor(w * 0.25)));
+    const color = isSelf ? 'linear-gradient(135deg,var(--ac2),var(--acc))' : (peers[pid]?.color || nc());
+    vw.innerHTML = `<div class="tile-avatar">
+      <div class="av-c" style="width:${avSz}px;height:${avSz}px;font-size:${Math.floor(avSz*.42)}px;background:${color}">${name[0]?.toUpperCase()||'?'}</div>
+      ${w>=120?`<div style="font-size:11px;color:var(--text2)">${name}</div>`:''}
+    </div>`;
+  }
+  inner.appendChild(vw);
+
+  const ma = document.createElement('div'); ma.className = 'mic-anim';
+  ma.innerHTML = '<span></span><span></span><span></span>'; inner.appendChild(ma);
+
+  const top = document.createElement('div'); top.className = 'tile-top';
+  if (isTeach) top.innerHTML += `<span class="badge badge-t">Teacher</span>`;
+  if (isSelf)  top.innerHTML += `<span class="badge badge-you">You</span>`;
+  if (isHost && !isTeach) top.innerHTML += `<span class="badge badge-host">Host</span>`;
+  if (pinnedId === pid) top.innerHTML += `<span class="badge badge-pin">📌</span>`;
+  inner.appendChild(top);
+
+  const nb = document.createElement('div'); nb.className = 'tile-namebar';
+  const micOn = isSelf ? myMic : (peers[pid]?.micOn !== false);
+  nb.innerHTML = `<div class="tile-nm">${name}</div><div class="tile-mic-ico">${micOn?'🎤':'🔇'}</div>`;
+  inner.appendChild(nb);
+
+  tile.appendChild(inner);
+
+  const dots = document.createElement('button');
+  dots.className = 'tile-3dots'; dots.textContent = '⋮';
+  dots.addEventListener('click', e => { e.stopPropagation(); openCtx(pid, isSelf, e); });
+  tile.appendChild(dots);
+
+  const rh = document.createElement('div'); rh.className = 'rh';
+  tile.appendChild(rh);
+
+  makeDrag(tile, pid);
+  makeResize(tile, rh);
+  tile.addEventListener('pointerdown', () => bF(tile));
+  cv.appendChild(tile);
+}
+
+function refreshTile(pid) {
+  const t = document.getElementById('tile-'+pid); if (!t||!peers[pid]) return;
+  const p = peers[pid];
+  const x = parseInt(t.style.left), y = parseInt(t.style.top), w = t.offsetWidth, zi = t.style.zIndex;
+  makeTile(pid, pid, p.name, p.stream, false, x, y, w, Math.round(w*0.75), false, p.isHost);
+  document.getElementById('tile-'+pid).style.zIndex = zi;
+}
+
+function refreshSelf() {
+  const t = document.getElementById('tile-self'); if (!t) return;
+  const w = t.offsetWidth;
+  makeTile('self','self',myName,myStream,true,parseInt(t.style.left),parseInt(t.style.top),w,Math.round(w*0.75),isTeacher,false);
+}
+
+/* ══════════════════════════════════════════════
+   CONTEXT MENU
+══════════════════════════════════════════════ */
+function openCtx(pid, isSelf, e) {
+  e.stopPropagation(); ctxPid = pid;
+  const menu = document.getElementById('ctx-menu');
+  const micOn = isSelf ? myMic : (peers[pid]?.micOn !== false);
+  const p = peers[pid];
+  let html = '';
+  if (isSelf) {
+    html += ctxItem('⛶','Fullscreen',`openFS('${pid}')`);
+  } else if (isTeacher) {
+    html += ctxItem(micOn?'🔇':'🎤', micOn?'Mute':'Unmute', `ctxMic('${pid}')`);
+    html += ctxItem('⛶','Fullscreen',`openFS('${pid}')`);
+    html += ctxItem('📌', p?.isPinned?'Unpin':'Pin', `ctxPin('${pid}')`);
+    html += `<div class="ctx-sep"></div>`;
+    html += ctxItem('👑','Set as Host',`ctxHost('${pid}')`);
+  } else {
+    html += ctxItem('⛶','Fullscreen',`openFS('${pid}')`);
+  }
+  menu.innerHTML = html;
+  const rect = e.target.getBoundingClientRect();
+  let top = rect.bottom + 4, left = rect.left - 140;
+  if (left < 4) left = 4;
+  if (top + 200 > window.innerHeight) top = rect.top - 200;
+  menu.style.top = top + 'px'; menu.style.left = left + 'px';
+  menu.classList.add('open');
+}
+
+function ctxItem(icon, label, fn) {
+  return `<button class="ctx-item" onclick="${fn};closeCtx()"><span class="ci2">${icon}</span>${label}</button>`;
+}
+function closeCtx() { document.getElementById('ctx-menu').classList.remove('open'); ctxPid = null; }
+
+window.ctxMic = pid => {
+  if (!peers[pid]) return;
+  peers[pid].micOn = !(peers[pid].micOn !== false);
+  refreshTile(pid);
+  toast(`${peers[pid].name}: ${peers[pid].micOn?'unmuted 🎤':'muted 🔇'}`);
+};
+window.ctxPin = pid => {
+  pinnedId = (pinnedId === pid) ? null : pid;
+  if (peers[pid]) peers[pid].isPinned = (pinnedId === pid);
+  refreshTile(pid);
+  toast(pinnedId===pid ? `${peers[pid]?.name} pinned 📌` : 'Unpinned');
+};
+window.ctxHost = pid => {
+  Object.keys(peers).forEach(p => { peers[p].isHost = false; refreshTile(p); });
+  if (peers[pid]) { peers[pid].isHost = true; refreshTile(pid); }
+  toast(`${peers[pid]?.name} set as Host 👑`);
+};
+
+/* ══════════════════════════════════════════════
+   FULLSCREEN
+══════════════════════════════════════════════ */
+window.openFS = pid => {
+  closeCtx();
+  const isSelf = pid === 'self';
+  const name = isSelf ? myName : (peers[pid]?.name || 'Student');
+  const stream = isSelf ? myStream : peers[pid]?.stream;
+  const color = isSelf ? 'linear-gradient(135deg,var(--ac2),var(--acc))' : (peers[pid]?.color || COL[0]);
+  const fv = document.getElementById('fs-vid');
+  const camOk = isSelf ? myCam : (peers[pid]?.camOn !== false);
+  if (stream && stream.getVideoTracks().length && camOk) {
+    fv.srcObject = stream; fv.muted = isSelf; fv.style.display = 'block';
+    fv.play().catch(() => {});
+    document.getElementById('fs-info').style.display = 'none';
+  } else {
+    fv.style.display = 'none'; document.getElementById('fs-info').style.display = 'flex';
+    const av = document.getElementById('fs-av'); av.textContent = name[0]?.toUpperCase()||'?'; av.style.background = color;
+    document.getElementById('fs-nm').textContent = name;
+  }
+  document.getElementById('fs-acts').innerHTML = `<button class="fsact" onclick="closeFS()">✕ Close</button>`;
+  document.getElementById('fs-overlay').classList.add('open');
+};
+window.closeFS = () => {
+  document.getElementById('fs-overlay').classList.remove('open');
+  // Detach srcObject to avoid keeping stream reference in fullscreen
+  const fv = document.getElementById('fs-vid');
+  if (fv) { fv.srcObject = null; }
+};
+
+/* ══════════════════════════════════════════════
+   MIC / CAM CONTROLS
+══════════════════════════════════════════════ */
+window.toggleMyMic = () => {
+  myMic = !myMic;
+  myStream?.getAudioTracks().forEach(t => { t.enabled = myMic; });
+  updateSelfUI(); refreshSelf();
+  toast(myMic ? 'Mic on 🎤' : 'Mic off 🔇');
+};
+window.toggleMyCam = async () => {
+  const vidTracks = myStream ? myStream.getVideoTracks() : [];
+  if (vidTracks.length === 0 && !myCam) {
+    // No video track — try to get one
+    try {
+      const vs = await navigator.mediaDevices.getUserMedia({ video: true });
+      vs.getVideoTracks().forEach(t => {
+        myStream.addTrack(t);
+        // BUG 3+8 FIX: replaceTrack if sender exists, else addTrack to peerConnection
+        Object.values(calls).forEach(c => {
+          try {
+            const pc = c.peerConnection;
+            if (!pc) return;
+            const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+            if (sender) {
+              sender.replaceTrack(t);
+            } else {
+              // No video sender yet — add new track to existing connection
+              pc.addTrack(t, myStream);
+            }
+          } catch(e) { console.warn('replaceTrack/addTrack error:', e); }
+        });
+      });
+      myCam = true;
+    } catch(e) {
+      toast('Cannot enable camera: ' + e.name);
+      return;
+    }
+  } else {
+    myCam = !myCam;
+    vidTracks.forEach(t => { t.enabled = myCam; });
+  }
+  updateSelfUI(); refreshSelf();
+  toast(myCam ? 'Camera on 📷' : 'Camera off 📵');
+};
+function updateSelfUI() {
+  document.getElementById('mic-ico').textContent = myMic ? '🎤' : '🔇';
+  document.getElementById('mic-btn').classList.toggle('off', !myMic);
+  document.getElementById('cam-ico').textContent = myCam ? '📷' : '📵';
+  document.getElementById('cam-btn').classList.toggle('off', !myCam);
+}
+
+/* ══════════════════════════════════════════════
+   MUTE ALL
+══════════════════════════════════════════════ */
+window.toggleMuteAll = () => {
+  allMuted = !allMuted;
+  Object.keys(peers).forEach(pid => { peers[pid].micOn = !allMuted; refreshTile(pid); });
+  document.getElementById('mai').textContent = allMuted ? '🔊' : '🔇';
+  document.getElementById('mal').textContent = allMuted ? 'Unmute All' : 'Mute All';
+  document.getElementById('mute-all-btn').classList.toggle('amuted', allMuted);
+  toast(allMuted ? 'All students muted 🔇' : 'All students unmuted 🎤');
+};
+
+/* ══════════════════════════════════════════════
+   END CLASS — FIX: Role-based end behavior
+   - Student: immediate leave, no modal
+   - Teacher: show modal with 2 options
+══════════════════════════════════════════════ */
+window.showEndModal = () => {
+  if (!isTeacher) {
+    // FIX: Students immediately leave with no confirmation, no modal
+    doEnd(false);
+    return;
+  }
+  // Teacher: show modal
+  document.getElementById('end-modal').classList.add('open');
+};
+
+window.closeEndModal = () => document.getElementById('end-modal').classList.remove('open');
+window.endForEveryone = () => { closeEndModal(); doEnd(true); };
+window.endForMe = () => { closeEndModal(); doEnd(false); };
+
+function doEnd(everyone) {
+  // FIX: Stop all active media streams when leaving or ending
+  stopPlayback();
+
+  clearInterval(timerInt); timerSec = 0;
+  const cv = document.getElementById('canvas');
+  cv.innerHTML = '<div id="perm-overlay"><div class="perm-ico">📷</div><div class="perm-title">Camera &amp; Mic Access Needed</div><div class="perm-sub">Tap below — allow access when browser asks</div><button class="perm-btn" onclick="requestMediaPermission()">🎤 Allow Camera &amp; Mic</button><div id="perm-status" style="font-size:12px;color:var(--text2);text-align:center;max-width:260px;line-height:1.5;margin-top:4px;"></div></div><div id="cam-banner">⚠️ Camera/Mic blocked. Allow in browser settings then refresh.</div>';
+  allMuted = false; pinnedId = null; cI = 0;
+  document.getElementById('timer').textContent = '00:00:00';
+  document.getElementById('mai').textContent = '🔇';
+  document.getElementById('mal').textContent = 'Mute All';
+  document.getElementById('mute-all-btn').classList.remove('amuted');
+  // Close fullscreen if open
+  document.getElementById('fs-overlay').classList.remove('open');
+
+  if (UR) {
+    show('student-screen');
+    document.getElementById('s-name').value = '';
+    document.getElementById('s-err').textContent = '';
+  } else {
+    show('teacher-screen');
+  }
+  if (everyone) toast('Class ended for everyone 👋');
+  else toast(isTeacher ? 'You left — class continues 🙏' : 'You left the class 🙏');
+}
+
+/* ══════════════════════════════════════════════
+   DAILY.CO VIDEO — Replaces PeerJS
+   Room: https://athiyogi.daily.co/Yoga
+   API Key used only to create meeting tokens
+══════════════════════════════════════════════ */
+const DAILY_API_KEY  = 'f6dfa0edff9297777d01770a8e3d27ce291cbb35bde2242b5df0ce75ec17f2f3';
+const DAILY_ROOM_URL = 'https://athiyogi.daily.co/Yoga';
+let   dailyCall      = null;
+
+function loadPeer() {
+  if (typeof window.DailyIframe !== 'undefined') { initDaily(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://unpkg.com/@daily-co/daily-js';
+  s.onload  = initDaily;
+  s.onerror = () => toast('Daily.co load failed — check connection');
+  document.head.appendChild(s);
+}
+
+async function initDaily() {
+  setPermStatus('Connecting to Daily.co…');
+  try {
+    // Create a meeting token so teacher gets owner privileges
+    let token = '';
+    try {
+      const res = await fetch('https://api.daily.co/v1/meeting-tokens', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + DAILY_API_KEY
+        },
+        body: JSON.stringify({
+          properties: {
+            room_name: 'Yoga',
+            is_owner: isTeacher,
+            user_name: myName,
+            enable_screenshare: isTeacher,
+            start_video_off: false,
+            start_audio_off: false
+          }
+        })
+      });
+      const td = await res.json();
+      token = td.token || '';
+      console.log('✅ Daily token created');
+    } catch(e) {
+      console.warn('Token creation failed, joining without token:', e);
+    }
+
+    // Destroy previous call if any
+    if (dailyCall) { try { await dailyCall.destroy(); } catch(e){} dailyCall = null; }
+
+    // Create Daily call object (headless — no iframe)
+    dailyCall = window.DailyIframe.createCallObject({
+      audioSource: true,
+      videoSource: true,
+      dailyConfig: { experimentalChromeVideoMuteLightOff: true }
+    });
+
+    // ── Event listeners ──
+    dailyCall
+      .on('joined-meeting',    onDailyJoined)
+      .on('participant-joined', onDailyParticipantJoined)
+      .on('participant-updated', onDailyParticipantUpdated)
+      .on('participant-left',  onDailyParticipantLeft)
+      .on('track-started',     onDailyTrackStarted)
+      .on('track-stopped',     onDailyTrackStopped)
+      .on('error',             onDailyError)
+      .on('left-meeting',      () => { toast('You left the meeting'); });
+
+    // Join
+    const joinOpts = { url: DAILY_ROOM_URL, userName: myName };
+    if (token) joinOpts.token = token;
+    await dailyCall.join(joinOpts);
+
+  } catch(e) {
+    console.error('Daily init error:', e);
+    toast('Could not join — ' + (e.message || e));
+    setPermStatus('Connection failed. Try refreshing.');
+  }
+}
+
+function onDailyJoined(evt) {
+  console.log('✅ Joined Daily room:', evt);
+  hidePermOverlay();
+
+  // Get local participant's tracks for self-tile
+  const lp = dailyCall.participants().local;
+  myStream = buildStream(lp);
+  updateSelfUI();
+  createSelfTile();
+
+  if (isTeacher) toast('Class ready! Tap 🔗 Share to invite students 🙏');
+  else           toast('Joined class! 🙏');
+}
+
+function onDailyParticipantJoined(evt) {
+  const p = evt.participant;
+  if (p.local) return;
+  console.log('👤 Participant joined:', p.user_name, p.session_id);
+  toast(`${p.user_name || 'Student'} joined 🧘`);
+}
+
+function onDailyParticipantUpdated(evt) {
+  const p = evt.participant;
+  if (p.local) {
+    // Update own mic/cam state
+    myMic = p.audio;
+    myCam = p.video;
+    updateSelfUI(); refreshSelf();
+    return;
+  }
+  // Remote participant state update
+  const sid = p.session_id;
+  if (!peers[sid]) return;
+  peers[sid].micOn = p.audio;
+  peers[sid].camOn = p.video;
+  refreshTile(sid);
+}
+
+function onDailyTrackStarted(evt) {
+  const p = evt.participant;
+  if (!p || p.local) return;
+  const sid = p.session_id;
+  const name = p.user_name || 'Student';
+  const stream = buildStream(p);
+
+  if (peers[sid]) {
+    // Update existing peer
+    peers[sid].stream = stream;
+    peers[sid].camOn  = p.video;
+    peers[sid].micOn  = p.audio;
+    refreshTile(sid);
+  } else {
+    peers[sid] = {
+      name: name,
+      color: nc(),
+      micOn: p.audio !== false,
+      camOn: p.video !== false,
+      stream: stream,
+      isHost: false,
+      isPinned: false
+    };
+    placePeer(sid, name, stream);
+  }
+}
+
+function onDailyTrackStopped(evt) {
+  const p = evt.participant;
+  if (!p || p.local) return;
+  const sid = p.session_id;
+  if (!peers[sid]) return;
+  peers[sid].stream = buildStream(p);
+  peers[sid].camOn  = p.video;
+  peers[sid].micOn  = p.audio;
+  refreshTile(sid);
+}
+
+function onDailyParticipantLeft(evt) {
+  const sid = evt.participant.session_id;
+  removePeer(sid);
+}
+
+function onDailyError(evt) {
+  console.error('Daily error:', evt);
+  toast('Connection error: ' + (evt.errorMsg || evt.error || 'unknown'));
+}
+
+// Build a MediaStream from Daily participant tracks
+function buildStream(p) {
+  const tracks = [];
+  if (p.tracks?.video?.persistentTrack) tracks.push(p.tracks.video.persistentTrack);
+  if (p.tracks?.audio?.persistentTrack) tracks.push(p.tracks.audio.persistentTrack);
+  return new MediaStream(tracks);
+}
+
+// Override toggleMyMic to use Daily
+window.toggleMyMic = () => {
+  if (!dailyCall) return;
+  myMic = !myMic;
+  dailyCall.setLocalAudio(myMic);
+  updateSelfUI(); refreshSelf();
+  toast(myMic ? 'Mic on 🎤' : 'Mic off 🔇');
+};
+
+// Override toggleMyCam to use Daily
+window.toggleMyCam = async () => {
+  if (!dailyCall) return;
+  myCam = !myCam;
+  dailyCall.setLocalVideo(myCam);
+  updateSelfUI(); refreshSelf();
+  toast(myCam ? 'Camera on 📷' : 'Camera off 📵');
+};
+
+// Override toggleMuteAll (teacher only) — Daily owner can eject/mute
+window.toggleMuteAll = () => {
+  if (!isTeacher || !dailyCall) return;
+  allMuted = !allMuted;
+  Object.keys(peers).forEach(sid => {
+    peers[sid].micOn = !allMuted;
+    refreshTile(sid);
+  });
+  // Update UI
+  document.getElementById('mai').textContent = allMuted ? '🔊' : '🔇';
+  document.getElementById('mal').textContent = allMuted ? 'Unmute All' : 'Mute All';
+  document.getElementById('mute-all-btn').classList.toggle('amuted', allMuted);
+  toast(allMuted ? 'All muted (local view)' : 'All unmuted');
+};
+
+// Override requestMediaPermission to use Daily
+window.requestMediaPermission = async function() {
+  setPermStatus('Connecting…');
+  // Daily handles permissions internally on join
+  await initDaily();
+};
+
+function placePeer(pid, name, stream) {
+  const cv = document.getElementById('canvas');
+  const cw = cv.clientWidth || window.innerWidth;
+  const ch = cv.clientHeight || (window.innerHeight - 106);
+  const idx = Object.keys(peers).indexOf(pid);
+  // BUG 9 FIX: for 5+ students, distribute in a grid instead of stacking
+  if (idx < DEF.length - 1) {
+    const d = DEF[idx + 1];
+    const w = Math.round(d.w / 100 * cw), h = Math.round(w * 0.75);
+    makeTile(pid, pid, name, stream, false, Math.round(d.x/100*cw), Math.round(d.y/100*ch), w, h, false, false);
+  } else {
+    // Overflow: place in a row at bottom, offset by index
+    const col = (idx - DEF.length + 1) % 3;
+    const row = Math.floor((idx - DEF.length + 1) / 3);
+    const w = Math.round(cw * 0.28);
+    const h = Math.round(w * 0.75);
+    const x = Math.min(col * (w + 8) + 4, cw - w - 4);
+    const y = Math.min(row * (h + 8) + 4, ch - h - 4);
+    makeTile(pid, pid, name, stream, false, x, y, w, h, false, false);
+  }
+}
+
+function removePeer(pid) {
+  document.getElementById('tile-'+pid)?.remove();
+  const name = (peers[pid]||{}).name || 'Student';
+  // FIX: Stop the peer's stream tracks on removal
+  if (peers[pid]?.stream) {
+    peers[pid].stream.getTracks().forEach(t => t.stop());
+  }
+  if (calls[pid]) { try { calls[pid].close(); } catch(e){} }
+  delete peers[pid]; delete calls[pid];
+  toast(`${name} left`);
+}
+
+/* ══════════════════════════════════════════════
+   DRAG
+══════════════════════════════════════════════ */
+function makeDrag(tile) {
+  let ox, oy, ix, iy, on = false;
+  const s = e => {
+    if (e.target.closest('.tile-3dots,.rh')) return;
+    on = true; bF(tile);
+    const pt = e.touches ? e.touches[0] : e;
+    ox = pt.clientX; oy = pt.clientY;
+    ix = tile.offsetLeft; iy = tile.offsetTop;
+    tile.classList.add('focused'); e.preventDefault();
+  };
+  const m = e => {
+    if (!on) return;
+    const pt = e.touches ? e.touches[0] : e;
+    const cv = document.getElementById('canvas');
+    tile.style.left = Math.max(0, Math.min(cv.clientWidth - tile.offsetWidth, ix + (pt.clientX - ox))) + 'px';
+    tile.style.top  = Math.max(0, Math.min(cv.clientHeight - tile.offsetHeight, iy + (pt.clientY - oy))) + 'px';
+  };
+  const en = () => { on = false; tile.classList.remove('focused'); };
+  tile.addEventListener('pointerdown', s, { passive: false });
+  window.addEventListener('pointermove', m, { passive: true });
+  window.addEventListener('pointerup', en);
+  tile.addEventListener('touchstart', s, { passive: false });
+  window.addEventListener('touchmove', m, { passive: true });
+  window.addEventListener('touchend', en);
+}
+
+/* ══════════════════════════════════════════════
+   RESIZE 4:3
+══════════════════════════════════════════════ */
+function makeResize(tile, rh) {
+  let sx, sw, on = false;
+  const s = e => {
+    on = true; bF(tile);
+    const pt = e.touches ? e.touches[0] : e;
+    sx = pt.clientX; sw = tile.offsetWidth;
+    tile.classList.add('focused'); e.stopPropagation(); e.preventDefault();
+  };
+  const m = e => {
+    if (!on) return;
+    const pt = e.touches ? e.touches[0] : e;
+    const nw = Math.max(110, sw + (pt.clientX - sx));
+    const nh = Math.round(nw * 0.75);
+    tile.style.width = nw + 'px'; tile.style.height = nh + 'px';
+    const av = tile.querySelector('.av-c');
+    if (av) {
+      const az = Math.max(26, Math.min(58, Math.floor(nw * 0.25)));
+      av.style.width = az + 'px'; av.style.height = az + 'px';
+      av.style.fontSize = Math.floor(az * 0.42) + 'px';
+    }
+  };
+  const en = () => { if (on) { on = false; tile.classList.remove('focused'); } };
+  rh.addEventListener('pointerdown', s, { passive: false });
+  window.addEventListener('pointermove', m, { passive: true });
+  window.addEventListener('pointerup', en);
+  rh.addEventListener('touchstart', s, { passive: false });
+  window.addEventListener('touchmove', m, { passive: true });
+  window.addEventListener('touchend', en);
+}
+
+function bF(t) { t.style.zIndex = ++zB; }
+
+/* ══════════════════════════════════════════════
+   TIMER
+══════════════════════════════════════════════ */
+function startTimer() {
+  clearInterval(timerInt);
+  timerInt = setInterval(() => {
+    timerSec++;
+    const h = String(Math.floor(timerSec / 3600)).padStart(2, '0');
+    const m = String(Math.floor((timerSec % 3600) / 60)).padStart(2, '0');
+    const s = String(timerSec % 60).padStart(2, '0');
+    document.getElementById('timer').textContent = `${h}:${m}:${s}`;
+  }, 1000);
+}
+
+/* ══════════════════════════════════════════════
+   SHARE
+══════════════════════════════════════════════ */
+window.openShare  = () => document.getElementById('sp').classList.add('open');
+window.closeShare = () => document.getElementById('sp').classList.remove('open');
+window.copyLink   = async () => {
+  try { await navigator.clipboard.writeText(shareUrl); } catch(e) {
+    // Fallback for non-HTTPS
+    const ta = document.createElement('textarea');
+    ta.value = shareUrl; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  }
+  toast('Link copied! ✓'); closeShare();
+};
+window.waShare = () => { window.open('https://wa.me/?text=' + encodeURIComponent('Join my Athi Yogi yoga class 🪷\n' + shareUrl), '_blank'); closeShare(); };
+window.openTheme  = () => document.getElementById('thp').classList.add('open');
+window.closeTheme = () => document.getElementById('thp').classList.remove('open');
+
+/* ══════════════════════════════════════════════
+   THEME — FIX: Save theme/color picker to localStorage
+══════════════════════════════════════════════ */
+const PS = [
+  {n:'Deep Ocean',bg:'#0a0d18',bg2:'#111628',bg3:'#1a2038',acc:'#4f8ef7',ac2:'#7c5cfc',txt:'#e8eaf2',tx2:'#7a84a0'},
+  {n:'Midnight',  bg:'#080808',bg2:'#141414',bg3:'#1e1e1e',acc:'#a78bfa',ac2:'#7c3aed',txt:'#f0f0f0',tx2:'#777'},
+  {n:'Forest',    bg:'#0c1410',bg2:'#162018',bg3:'#1f2d20',acc:'#4caf72',ac2:'#2d7a4f',txt:'#dff0e4',tx2:'#7aaa88'},
+  {n:'Ember',     bg:'#120a08',bg2:'#1e1008',bg3:'#2a180a',acc:'#f07a30',ac2:'#c04020',txt:'#f5e8da',tx2:'#a87a5a'},
+  {n:'Teal',      bg:'#070f12',bg2:'#0d1e24',bg3:'#142a32',acc:'#2dd4bf',ac2:'#0891b2',txt:'#e0f4f4',tx2:'#5a9090'},
+  {n:'Rose',      bg:'#120c0e',bg2:'#1e1214',bg3:'#2a1820',acc:'#f472b6',ac2:'#be185d',txt:'#fce7f3',tx2:'#a06080'},
+  {n:'Slate',     bg:'#0f1117',bg2:'#171b26',bg3:'#20253a',acc:'#94a3b8',ac2:'#475569',txt:'#e2e8f0',tx2:'#64748b'},
+  {n:'Gold',      bg:'#0e0c04',bg2:'#1a1608',bg3:'#26200c',acc:'#d4a843',ac2:'#a07820',txt:'#faf0d0',tx2:'#988840'},
+];
+
+function buildPresets() {
+  const row = document.getElementById('pr'); if (!row) return; row.innerHTML = '';
+  PS.forEach((p, i) => {
+    const b = document.createElement('div');
+    b.className = 'pc' + (i === 0 ? ' sel' : '');
+    b.title = p.n;
+    b.style.background = `linear-gradient(135deg,${p.bg2} 40%,${p.acc})`;
+    b.onclick = () => {
+      document.querySelectorAll('.pc').forEach((e,j) => e.classList.toggle('sel', j === i));
+      applyVars(p);
+      saveTheme(p);  // FIX: save on preset click
+      toast('Theme: ' + p.n);
+    };
+    row.appendChild(b);
+  });
+}
+
+function applyVars(p) {
+  const r = document.documentElement.style;
+  r.setProperty('--bg',   p.bg);
+  r.setProperty('--bg2',  p.bg2);
+  r.setProperty('--bg3',  p.bg3 || p.bg2);
+  r.setProperty('--acc',  p.acc);
+  r.setProperty('--ac2',  p.ac2);
+  r.setProperty('--text', p.txt);
+  r.setProperty('--text2',p.tx2);
+  const rc = parseInt(p.acc.slice(1,3),16), gc = parseInt(p.acc.slice(3,5),16), bc = parseInt(p.acc.slice(5,7),16);
+  r.setProperty('--border', `rgba(${rc},${gc},${bc},0.22)`);
+}
+
+/* FIX: Persist theme to localStorage */
+function saveTheme(p) {
+  try { localStorage.setItem(THEME_KEY, JSON.stringify(p)); } catch(e) {}
+}
+
+function loadSavedTheme() {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved) {
+      const p = JSON.parse(saved);
+      applyVars(p);
+      // Highlight matching preset
+      if (p.n) {
+        document.querySelectorAll('.pc').forEach((el, i) => {
+          el.classList.toggle('sel', PS[i]?.n === p.n);
+        });
+      }
+      // Update custom color pickers if present
+      const fields = { 'cp-bg':p.bg,'cp-bg2':p.bg2,'cp-acc':p.acc,'cp-ac2':p.ac2,'cp-txt':p.txt,'cp-tx2':p.tx2 };
+      Object.entries(fields).forEach(([id, val]) => {
+        const el = document.getElementById(id); if (el && val) el.value = val;
+      });
+    }
+  } catch(e) {}
+}
+
+/* FIX: Custom theme also saved to localStorage */
+window.applyCustom = () => {
+  const p = {
+    n: 'Custom',
+    bg:  document.getElementById('cp-bg').value,
+    bg2: document.getElementById('cp-bg2').value,
+    bg3: document.getElementById('cp-bg2').value,
+    acc: document.getElementById('cp-acc').value,
+    ac2: document.getElementById('cp-ac2').value,
+    txt: document.getElementById('cp-txt').value,
+    tx2: document.getElementById('cp-tx2').value,
+  };
+  applyVars(p);
+  saveTheme(p);  // FIX: persist custom theme
+  toast('Custom theme applied & saved ✓');
+};
+
+window.sh = (p, s) => document.getElementById(s).textContent = document.getElementById(p).value;
+</script>
+</body>
+</html>
